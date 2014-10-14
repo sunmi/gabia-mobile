@@ -1,0 +1,484 @@
+<!DOCTYPE HTML>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,target-densitydpi=medium-dpi">
+<title>메인페이지 : HANGAME</title>
+<link rel="stylesheet" href="http://m.www.hangame.com//share/css/main_w.css">	
+<script type="text/javascript" src="http://m.www.hangame.com//common/js/mobile_gnb_header.js"></script>
+<script type="text/javascript" src="http://m.www.hangame.com//share/js/www_mobile_main_builded.js" charset="UTF-8"></script>
+
+<body>
+<!-- header --> 
+
+
+<!-- skip -->
+<div class="skip">
+	<a href="#content">본문 바로가기</a>
+</div>
+<!-- //skip -->
+<!-- header -->
+
+	<script type="text/javascript">generateGNB('');</script>
+	
+
+<!-- //header -->
+<!-- content -->
+<section id="content" role="main">
+	<h1 class="blind">한게임</h1>
+	<section class="branding">
+		
+
+
+
+<!-- flicking JS -->
+<script type="text/javascript">
+(function(){
+	BrandingBoard = jindo.$Class({
+		$init : function(opt){
+						
+			if (!opt || opt === undefined) { return; }
+			
+			this.welFlick = (opt.sFlickContainer && opt.sFlickContainer !== '') ? jindo.$Element(opt.sFlickContainer) : null;
+			this.welNavi = (opt.sNaviContainer && opt.sNaviContainer !== '') ? jindo.$Element(opt.sNaviContainer) : null;
+			this.nAutoRollingTime = (opt.nAutoRollingTime === undefined && opt.nAutoRollingTime === '') ? null : opt.nAutoRollingTime;
+			
+			if (this.welFlick) {
+				
+				//  브랜딩보드 플리킹 생성
+				this.oFlicking = new jindo.m.PreviewFlicking( this.welFlick, {
+					nDefaultIndex : 0,  //  시작 패널 인덱스
+					sClassPrefix : 'flick-', //  css class prefix (flick-base, flick-container, flick-ct, flick-wrap)
+					sContentClass : 'ct', //  pannel css class name (prefix 제외)
+					sBaseClass : 'base',  //  container를 싸고 있는 상위 컨테이너 class name 
+					nMinWidth : "316px",  //  패널의 최소 너비
+					nDuration : 100,  //  animation time
+					nFlickThreshold : 40,  //  패넣이 바뀌기 위한 최소함의 플리킹 거리 (pixel)
+					bUseCircular : opt.bUseCircular, //  순환 구조 사용 여부
+					bAutoResize : true,  //  
+					nBounceDuration : 100,  // nFlickThreshold 이하로 움직여서 다시 제자리로 돌아갈 때 애니메이션 시간
+					bUseCss3d : jindo.m._isUseCss3d(true), //css3d사용여부 bUseTranslate가 true 일때만 사
+					bUseTimingFunction : jindo.m._isUseTimingFunction(true), //스크립트방식으로 애니메이션을 사용할지 csstimingfunction을 사용할지 여부
+					bUseTranslate : true,  //  css의 translate를 사용할지 style 속성의 left속성 사용할지 여부
+					bActivateOnload : true,  // 컴포넌트 로드시 activate 여부
+					bUseDiagonalTouch : true //  대각선스크롤을 플리킹에 사용할지 여부
+				}).attach({
+					"flicking" : jindo.$Fn(function(oCustomEvt){
+				    	this.updatePage(oCustomEvt.nContentsIndex + 1);
+				    	this.initializeTimer();
+				    }, this).bind(),
+				    "touchMove" : jindo.$Fn(function(oCustomEvt) {
+				    	this.finalizeTimer();
+				    }, this).bind()
+				});
+				
+				
+				if (this.welNavi) {
+					//  click event
+					this.welNavi.delegate('click', 'a', jindo.$Fn(this.directionHandler,this).bind());
+				}
+				
+				//  rotate 시 타이머를 멈추기 위하여 
+				jindo.$Fn(this.rotateHandler, this).attach(window, 'resize');
+				
+				//  자동롤링 타이머
+				this.initializeTimer();
+			}
+		},
+		
+		rotateHandler : function(e){
+	    	this.finalizeTimer();
+	    	setTimeout(jindo.$Fn(this.initializeTimer, this).bind(), this.nAutoRollingTime);
+		},
+		
+		initializeTimer : function() {
+			if (this.nAutoRollingTime && parseInt(this.nAutoRollingTime, 10) > 0 && !this.rollingTime) {
+				this.rollingTime = setInterval(jindo.$Fn(this.autoRolling, this).bind(), this.nAutoRollingTime);
+			}
+		},
+		
+		finalizeTimer : function() {
+			if (this.rollingTime) {
+				clearInterval(this.rollingTime);
+				this.rollingTime = null;
+			}
+		},
+		
+		autoRolling : function(a) {
+			if (this.rollingTime) {
+				this.oFlicking.moveNext(250);
+				this.updatePage(this.oFlicking.getContentIndex() + 2);
+			}
+		},
+		
+		directionHandler : function(oEvent){
+			//  window 기본 이벤트 멈춤
+			oEvent.stopDefault();
+			this.finalizeTimer();
+			
+			var welTarget = jindo.$Element(oEvent.element);
+			
+			if (welTarget.hasClass('page')) {
+				var nIndex = parseInt(welTarget.attr('href'),10);
+				this.updatePage(nIndex);
+				this.oFlicking.moveTo(nIndex - 1);
+			}else {
+				if (welTarget.className().indexOf('prev') > -1) {
+					//  prev
+					this.oFlicking.movePrev();
+				}else {
+					//  next
+					this.oFlicking.moveNext();
+				}
+			}
+		},
+		
+		updatePage : function(nIndex){
+			//alert("this.welNavi : " + this.welNavi.$value().tagName + " : " + nIndex);
+			jindo.$A(this.welNavi.child(function(v){
+				if (v.hasClass('on')){
+					//alert("remove : " + v.attr("href"));
+					v.removeClass('on');
+				}
+				return v.hasClass('page');
+			})).forEach(function(v, i, a){
+				if (v.attr('href').toString() === nIndex.toString()) {
+					v.addClass('on');
+				}
+			});
+		}
+	});
+})();
+</script>
+
+<div id="previewFlick">
+	<div class="flick-base">
+		<ul class="flick-container">
+			<!-- [D] .flick-ct 인라인 스타일은 컴포넌트 제어 영역 -->
+			
+			
+			
+			
+				<li class="flick-ct">
+				<div class="flick-wrap">
+					<a href="http://hgurl.me/amY" onclick="clickcr(this,'mbn.banner','124','',event);"><img src="http://images.hangame.co.kr/hangame/main2012/mobilebanner/bulyangdo_mb_20140930.png" width="290" height="113" alt="남자들의 불량한게임, 불량도!!! 드디어 일본에 이어 한국 런칭 감당할 수 있는 자만 드루와~"></a>
+				</div>
+				</li>
+			
+				<li class="flick-ct">
+				<div class="flick-wrap">
+					<a href="http://dv.hangame.com/" onclick="clickcr(this,'mbn.banner','121','',event);"><img src="http://images.hangame.co.kr/hangame/main2012/mobilebanner/devilian_mb_20140930.png" width="290" height="113" alt="데빌리언 특별 퀘스트 지금 가입하면 유료 아이템 바로 지급!"></a>
+				</div>
+				</li>
+			
+				<li class="flick-ct">
+				<div class="flick-wrap">
+					<a href="http://smart.hangame.com/game/game.nhn?m=detailGameInfo&gameNo=10261" onclick="clickcr(this,'mbn.banner','114','',event);"><img src="http://images.hangame.co.kr/hangame/main2012/mobilebanner/mbpoker_mb_20140818.png" width="290" height="113" alt="모바일 한게임 포커 랭킹매치로 진짜 실력을 겨룬다!"></a>
+				</div>
+				</li>
+			
+				<li class="flick-ct">
+				<div class="flick-wrap">
+					<a href="http://toast.com/mobile.nhn?gameNo=10224" onclick="clickcr(this,'mbn.banner','122','',event);"><img src="http://images.hangame.co.kr/hangame/main2012/mobilebanner/pokopang_mb_20141001.png" width="290" height="113" alt="전세계 5천만이 즐기는 포코팡 1주년 생일파티! "></a>
+				</div>
+				</li>
+			
+				<li class="flick-ct">
+				<div class="flick-wrap">
+					<a href="http://hgurl.me/amg" onclick="clickcr(this,'mbn.banner','118','',event);"><img src="http://images.hangame.co.kr/hangame/main2012/mobilebanner/ppuyo_mb_20140911.png" width="290" height="113" alt="귀요미 뿌요의 퍼즐 대연쇄 작전!"></a>
+				</div>
+				</li>
+			
+			
+			
+		</ul>
+	</div>
+</div>
+<div id="navigation">
+
+	<a href="#" class="sp_img btn_prev">이전 배너</a> 
+	<a href="#" class="sp_img btn_next">다음 배너</a>       
+	<p class="pagenate">
+	
+	
+	<a href="1" class="on page">1</a><a href="2" class=" page">2</a><a href="3" class=" page">3</a><a href="4" class=" page">4</a><a href="5" class=" page">5</a>
+	
+	</p>
+</div>
+<!-- branding board flicking javaScript -->
+
+<!-- flicking initialize -->
+<script type="text/javascript">
+/**
+ *  oOption description
+ *  sFlickContainer : 플리킹 컨테이너 id
+ *  sNaviContainer : 네비게이션컨테이너 id
+ *  bUseCircular : 순환구조 사용여부
+ */
+var oOption = {
+	sFlickContainer : "previewFlick", 
+	sNaviContainer : "navigation",
+	nAutoRollingTime : 3000,
+	bUseCircular : true
+};
+var brandingBoard = new BrandingBoard(oOption);
+
+</script>
+
+    </section>
+    
+	<section class="game_list">
+		
+
+
+
+<h2>온라인게임</h2>
+<ul>
+	
+		
+		<li>
+		    <a href="http://m.eos.hangame.com" onclick="clickcr(this,'olg.list','K_EOS','',event);">
+		    	
+		    		
+		    		
+		    		<span class="flag best">인기</span>
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.co.kr/hangame/main2012/default/116x116/eos.png" width="58" height="58" alt=""></p>
+		        <p class="name">에오스</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.asta.hangame.com" onclick="clickcr(this,'olg.list','K_ASTA','',event);">
+		    	
+		    		
+		    		
+		    		
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.co.kr/hangame/main2012/default/116x116/asta.png" width="58" height="58" alt=""></p>
+		        <p class="name">아스타</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.tera.hangame.com/" onclick="clickcr(this,'olg.list','K_TERA','',event);">
+		    	
+		    		
+		    		
+		    		<span class="flag best">인기</span>
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.com/hangame/main2012/default/116x116/tera.png" width="58" height="58" alt=""></p>
+		        <p class="name">TERA</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.kt.hangame.com" onclick="clickcr(this,'olg.list','K_KRITIKA','',event);">
+		    	
+		    		
+		    		
+		    		
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.com/hangame/main2012/default/116x116/kt.png" width="58" height="58" alt=""></p>
+		        <p class="name">크리티카</p>
+		    </a>
+		</li>
+	
+</ul>
+<a href="/onlinegame.nhn" onclick="clickcr(this,'olg.more','','',event);" class="sp_img btn_more">더보기</a>
+	</section>
+
+	<section class="game_list">
+		
+
+
+
+
+<h2>스마트한게임</h2>
+<ul>
+	
+		
+		<li>
+		    <a href="http://m.smart.hangame.com/#portal/gameDetail.jsp@10004" onclick="clickcr(this,'spg.list','10004','',event);">
+		    	
+		    		
+		    		
+		    		<span class="flag best">인기</span>
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.com/hangame/main2012/default/116x116/m_gmahjong.png" width="58" height="58" alt=""></p>
+		        <p class="name">한게임사천성</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.smart.hangame.com/#portal/gameDetail.jsp@10001" onclick="clickcr(this,'spg.list','10001','',event);">
+		    	
+		    		
+		    		
+		    		<span class="flag best">인기</span>
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.com/hangame/main2012/default/116x116/m_ssduelgo.png" width="58" height="58" alt=""></p>
+		        <p class="name">한게임신맞고</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.smart.hangame.com/#portal/gameDetail.jsp@10261" onclick="clickcr(this,'spg.list','SK10261','',event);">
+		    	
+		    		
+		    		
+		    		
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.co.kr/mobile/portal//2014_mpoker/mpoker_144x144.png" width="58" height="58" alt=""></p>
+		        <p class="name">한게임포커</p>
+		    </a>
+		</li>
+	
+		
+		<li>
+		    <a href="http://m.smart.hangame.com/#portal/gameDetail.jsp@10033" onclick="clickcr(this,'spg.list','10033','',event);">
+		    	
+		    		
+		    		
+		    		
+		    		
+		    	
+		        <p class="thum"><img src="http://images.hangame.com/hangame/main2012/default/116x116/m_minipack.png" width="58" height="58" alt=""></p>
+		        <p class="name">한게임미니팩</p>
+		    </a>
+		</li>
+	
+</ul>
+
+<a href="http://m.smart.hangame.com/index.nhn" onclick="clickcr(this,'spg.more','','',event);" class="sp_img btn_more">더보기</a>
+	</section>
+	
+	<section class="game_list">
+		
+
+
+
+
+<h2>TOAST게임</h2>
+<ul>
+
+	
+	<li>
+		<a href="http://hgurl.me/ael" onclick="clickcr(this,'tst.list','10284','',event);">
+		
+    		
+    		<span class="flag new">신규</span>
+    		
+    		
+    	
+    	<p class="thum"><img src="http://images.hangame.co.kr/toast/cookiepang/144x144_@2.png" width="58" height="58" alt=""></p>
+        <p class="name">쿠키런 문질문질</p>
+        </a>
+	</li>
+
+	
+	<li>
+		<a href="http://toast.com/mobile.nhn?gameNo=10278" onclick="clickcr(this,'tst.list','10278','',event);">
+		
+    		
+    		<span class="flag new">신규</span>
+    		
+    		
+    	
+    	<p class="thum"><img src="http://images.toast.co.kr/toast/wooparoosaga/toast2/2mainupicon.png" width="58" height="58" alt=""></p>
+        <p class="name">우파루사가</p>
+        </a>
+	</li>
+
+	
+	<li>
+		<a href="http://www.toast.com/mobile.nhn?gameNo=10263" onclick="clickcr(this,'tst.list','SKGSTONE','',event);">
+		
+    		
+    		
+    		
+    		
+    	
+    	<p class="thum"><img src="http://images.hangame.co.kr/toast/Gstone/app_icon_aos_144.png" width="58" height="58" alt=""></p>
+        <p class="name">가디언스톤</p>
+        </a>
+	</li>
+
+	
+	<li>
+		<a href="http://www.toast.com/mobile.nhn?gameNo=10150" onclick="clickcr(this,'tst.list','SKWARA','',event);">
+		
+    		
+    		
+    		
+    		
+    	
+    	<p class="thum"><img src="http://images.hangame.co.kr/mobile/portal/warastore/app_icon_144.png" width="58" height="58" alt=""></p>
+        <p class="name">와라편의점</p>
+        </a>
+	</li>
+
+</ul>
+<a href="http://www.toast.com/mobile.nhn" onclick="clickcr(this,'tst.more','','',event);" class="sp_img btn_more">더보기</a>
+	</section>
+</section>
+<!-- //content -->
+<!-- footer -->
+
+
+
+<!-- footer -->
+<footer id="footer" role="contentinfo">
+	<p class="data"><a href="/policy.nhn" onclick="clickcr(this,'fot.agreement','','',event);">이용약관</a><a href="/privacy.nhn" onclick="clickcr(this,'fot.privacy','','',event);">개인정보취급방침</a></p>
+	<p class="btn_area">
+		
+		<a href="#" onclick="clickcr(this,'fot.login','','',event);goLogin();return false;">로그인</a>
+		
+		<a href="http://www.hangame.com/index.nhn?mobile" onclick="clickcr(this,'fot.pc','','',event);">PC한게임 홈으로 이동</a>
+		<a href="http://www.toast.com/mobile.nhn" class="toast"><span>TOAST</span></a>
+	</p>
+	<p class="copy">&copy; <a href="http://www.nhnent.com" onclick="clickcr(this,'fot.nhncorp','','',event);">NHN Entertainment Corp.</a></p>
+</footer>
+<!-- //footer -->
+
+<script type="text/javascript">
+var nsc = "Mhangame.nologin"; //nClicks 서비스 코드
+var ccsrv="cc.hangame.com";
+
+// 리얼인 경우에만 실행되게 한다.
+if(location.href.indexOf("http://m.www.hangame.com") == 0){
+	lcs_do();
+}
+
+// PC 버전인 경우 스타일 추가
+var userAgent = navigator.userAgent;
+var regExp2 = new RegExp("^.*Mobile.*Safari.*|^Mozilla.*POLAR.*|^Mozilla.*NATEBrowser.*|^Opera.*SKT.*|^.*Windows\ CE.*Opera.*|^.*IEMobile.*|^.*iPhone.*|^.*iPad.*|^.*iPod.*|^.*Android.*|^.*Windows\ CE.*POLAR.*|^.*Dolfin.*");
+if (typeof(userAgent) != "undefined") {
+	if (!regExp2.test(userAgent)) {
+		// PC 버전인 경우 스타일 추가
+		document.getElementsByTagName('body')[0].className='e';
+	} else {
+		// 주소 표시줄 숨기기
+		try {
+		    window.addEventListener('load', function(){
+		 		setTimeout(scrollTo, 0, 0, 1);
+			}, false);
+		} catch(e) {
+		}
+	}
+}
+</script>
+</body>
+</html>
